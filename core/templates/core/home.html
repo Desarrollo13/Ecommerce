@@ -1,0 +1,68 @@
+{% extends "base/base.html" %}
+{% block title %}Inicio | MiEcommerce{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="bg-light text-center py-5">
+    <div class="container">
+        <h1 class="display-5 fw-bold">Impulsa tu negocio hoy</h1>
+        <p class="lead mt-3">
+            La mejor plataforma para vender tus productos online
+        </p>
+        <a href="#" class="btn btn-primary btn-lg mt-3">Ver productos</a>
+    </div>
+</section>
+
+<!-- FEATURES -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-4">
+                <h4>🚀 Rápido</h4>
+                <p>Optimizado para ventas reales</p>
+            </div>
+            <div class="col-md-4">
+                <h4>🔒 Seguro</h4>
+                <p>Protección y control total</p>
+            </div>
+            <div class="col-md-4">
+                <h4>⚙️ Escalable</h4>
+                <p>Crece con tu negocio</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PRODUCTOS DESTACADOS -->
+<section class="bg-light py-5">
+    <div class="container">
+        <h2 class="text-center mb-4">Productos destacados</h2>
+
+        <div class="row">
+            {% for product in featured_products %}
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100">
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                        <div class="card-body text-center">
+                            <h6 class="card-title">{{ product.name }}</h6>
+                            <p class="fw-bold">$ {{ product.price }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-center">No hay productos destacados</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="py-5 text-center">
+    <div class="container">
+        <h2>¿Listo para comenzar?</h2>
+        <a href="#" class="btn btn-success btn-lg mt-3">Crear cuenta</a>
+    </div>
+</section>
+
+{% endblock %}

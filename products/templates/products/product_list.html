@@ -1,0 +1,58 @@
+{% extends "base/base.html" %}
+
+{% block title %}Tienda{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+
+        <!-- Categorías -->
+        <aside class="col-md-3">
+            <h5>Categorías</h5>
+            <ul class="list-group">
+                <a href="{% url 'product_list' %}" class="list-group-item">Todas</a>
+                {% for cat in categories %}
+                    <a href="{% url 'product_by_category' cat.slug %}"
+                       class="list-group-item {% if current_category == cat %}active{% endif %}">
+                        {{ cat.name }}
+                    </a>
+                {% endfor %}
+            </ul>
+        </aside>
+
+        <!-- Productos -->
+        <div class="col-md-9">
+            <div class="row">
+                {% for product in products %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" class="card-img-top">
+                        {% else %}
+                            <img src="https://via.placeholder.com/300x300" class="card-img-top">
+                        {% endif %}               <div class="card-body">
+                                <h6>{{ product.name }}</h6>
+                                {% if product.discount_price %}
+                                    <p>
+                                        <del>$ {{ product.price }}</del>
+                                        <strong>$ {{ product.discount_price }}</strong>
+                                    </p>
+                                {% else %}
+                                    <p>$ {{ product.price }}</p>
+                                {% endif %}
+                                <a href="{% url 'product_detail' product.slug %}"
+                                   class="btn btn-sm btn-primary">
+                                   Ver detalle
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>No hay productos disponibles</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

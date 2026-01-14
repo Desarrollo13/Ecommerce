@@ -1,0 +1,50 @@
+{% extends "base/base.html" %}
+{% block title %}Carrito{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2>Carrito de compras</h2>
+
+    {% if cart %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio</th>
+                    <th>Total</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>$ {{ item.price }}</td>
+                        <td>$ {{ item.total_price }}</td>
+                        <td>
+                            <a href="{% url 'cart_remove' item.product.id %}"
+                               class="btn btn-sm btn-danger">
+                               Eliminar
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h4 class="text-end">
+            Total: $ {{ cart.get_total_price }}
+        </h4>
+
+        <div class="text-end">
+            <a href="#" class="btn btn-success">
+                Continuar compra
+            </a>
+        </div>
+    {% else %}
+        <p>Tu carrito está vacío</p>
+    {% endif %}
+</div>
+{% endblock %}
