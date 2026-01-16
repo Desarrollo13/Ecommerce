@@ -23,10 +23,29 @@ class Order(models.Model):
     city = models.CharField(max_length=100)
     postal_code = models.CharField(max_length=20)
     created_at = models.DateTimeField(auto_now_add=True)
+
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default="pending"
+    )
+
+    # 🔽 NUEVOS CAMPOS (Mercado Pago)
+    mp_payment_id = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    mp_status = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True
+    )
+    mercadopago_payment_id = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
     )
 
     class Meta:
@@ -39,6 +58,7 @@ class Order(models.Model):
 
     def get_total(self):
         return sum(item.get_total_price() for item in self.items.all())
+
 
 
 class OrderItem(models.Model):

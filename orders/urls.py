@@ -12,4 +12,7 @@ urlpatterns = [
     path("pagos/exito/", views.pago_exito, name="pago_exito"),
     path("pagos/error/", views.pago_error, name="pago_error"),
     path("pagos/pendiente/", views.pago_pendiente, name="pago_pendiente"),
+    # mercadopago
+    path("pagos/webhook/", views.mercadopago_webhook, name="mp_webhook"),
+
 ]
