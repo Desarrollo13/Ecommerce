@@ -15,6 +15,11 @@ import os
 from dotenv import load_dotenv
 
 
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "MiEcommerce <no-reply@miecommerce.com>"
+
+
+
 
 
 load_dotenv()
@@ -35,8 +40,14 @@ SECRET_KEY = "django-insecure-4n6o#d%6n-ng2(^t=#h42$pw4y^^t1$wys!xl$sl#*x_1=^cs6
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "limbless-untaciturn-ardith.ngrok-free.dev",
+]
 
-ALLOWED_HOSTS = []
+
+# ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -51,10 +62,13 @@ INSTALLED_APPS = [
     "core",
     "products",
     "cart",
-    "orders",
+    # "orders",
+    "orders.apps.OrdersConfig",
     "accounts",
     "chatbot",
     "dashboard",
+
+   
 
 ]
 

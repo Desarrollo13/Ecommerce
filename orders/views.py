@@ -7,6 +7,11 @@ from .forms import OrderCreateForm
 from django.http import HttpResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from .utils import send_payment_success_email
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+
 
 
 def order_create(request):
@@ -49,14 +54,40 @@ def order_create(request):
 
 
 
+@login_required
+def order_detail(request, order_id):
+
+    if request.user.is_staff:
+        order = get_object_or_404(Order, id=order_id)
+    else:
+        order = get_object_or_404(
+            Order,
+            id=order_id,
+            user=request.user
+        )
+
+    return render(
+        request,
+        "orders/order_detail.html",
+        {"order": order}
+    )
+
+
+
+
+
+
+
 def create_mp_preference(request, order_id):
     order = get_object_or_404(Order, id=order_id)
 
-    sdk = mercadopago.SDK(
-        "APP_USR-1525879268983887-011517-d6aa76ac6d53ef3cd6d536ca9905eb1b-3136918293"
-    )
+    sdk = mercadopago.SDK(settings.MERCADOPAGO_ACCESS_TOKEN)
+
 
     
+    
+    NGROK_URL = "https://limbless-untaciturn-ardith.ngrok-free.dev"
+
     preference_data = {
     "items": [
         {
@@ -66,24 +97,22 @@ def create_mp_preference(request, order_id):
             "currency_id": "ARS",
         }
     ],
-    
     "back_urls": {
-    "success": request.build_absolute_uri("/orden/pagos/exito/"),
-    "failure": request.build_absolute_uri("/orden/pagos/error/"),
-    "pending": request.build_absolute_uri("/orden/pagos/pendiente/"),   
+        "success": f"{NGROK_URL}/orden/pagos/exito/",
+        "failure": f"{NGROK_URL}/orden/pagos/error/",
+        "pending": f"{NGROK_URL}/orden/pagos/pendiente/",
     },
-    "notification_url": request.build_absolute_uri(
-        "/orden/pagos/webhook/"
-    ),
-
-
-
-
-
-    # "auto_return": "approved",
+    "notification_url": f"{NGROK_URL}/orden/pagos/webhook/",
     "external_reference": str(order.id),
-
+    "binary_mode": True,
 }
+
+
+
+
+
+
+
 
 
     preference = sdk.preference().create(preference_data)
@@ -108,32 +137,31 @@ def create_mp_preference(request, order_id):
 
 
 
-def pago_exito(request):
-    payment_id = request.GET.get("payment_id")
-    external_reference = request.GET.get("external_reference")
 
-    if not payment_id or not external_reference:
-        return HttpResponse("Pago inválido", status=400)
 
-    sdk = mercadopago.SDK(settings.MERCADOPAGO_ACCESS_TOKEN)
 
-    payment = sdk.payment().get(payment_id)
+def pago_exito(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
 
-    response = payment.get("response", {})
-
-    if response.get("status") == "approved":
-        order = get_object_or_404(Order, id=external_reference)
-
-        order.status = "paid"
-        order.save()
-
+    if order.status != "paid":
         return render(
             request,
-            "orders/pago_exito.html",
+            "orders/pago_invalido.html",
             {"order": order}
         )
 
-    return HttpResponse("El pago no fue aprobado", status=400)
+    # 🔔 ENVIAR EMAIL SOLO UNA VEZ
+    if not order.mp_payment_id:
+        send_payment_success_email(order)
+        order.mp_payment_id = "email_sent"
+        order.save()
+
+    return render(
+        request,
+        "orders/pago_exito.html",
+        {"order": order}
+    )
+
 
 
 
@@ -146,29 +174,109 @@ def pago_pendiente(request):
 
 
 
-
-
-
-
 @csrf_exempt
 def mercadopago_webhook(request):
-    data = json.loads(request.body)
+    try:
+        topic = request.GET.get("topic")
+        resource_id = request.GET.get("id")
 
-    payment_id = data.get("data", {}).get("id")
-    topic = data.get("type")
+        print("📩 WEBHOOK:", topic, resource_id)
 
-    if topic == "payment":
+        if not topic or not resource_id:
+            print("⚠️ Webhook incompleto")
+            return HttpResponse(status=200)
+
         sdk = mercadopago.SDK(settings.MERCADOPAGO_ACCESS_TOKEN)
-        payment = sdk.payment().get(payment_id)
 
-        payment_data = payment["response"]
+        if topic != "merchant_order":
+            print("ℹ️ Topic ignorado:", topic)
+            return HttpResponse(status=200)
 
-        if payment_data["status"] == "approved":
-            order_id = payment_data["external_reference"]
+        mo_result = sdk.merchant_order().get(resource_id)
+        merchant_order = mo_result.get("response")
 
-            order = Order.objects.get(id=order_id)
-            order.status = "paid"
-            order.mercadopago_payment_id = payment_id
-            order.save()
+        if not merchant_order:
+            print("❌ merchant_order vacío:", mo_result)
+            return HttpResponse(status=200)
 
-    return HttpResponse(status=200)
+        print("📦 MERCHANT ORDER:", merchant_order)
+
+        order_id = merchant_order.get("external_reference")
+        if not order_id:
+            print("❌ Sin external_reference")
+            return HttpResponse(status=200)
+
+        payments = merchant_order.get("payments", [])
+        if not payments:
+            print("⚠️ Sin pagos todavía")
+            return HttpResponse(status=200)
+
+        for p in payments:
+            payment_id = p.get("id")
+            if not payment_id:
+                continue
+
+            payment_info = sdk.payment().get(payment_id)
+            payment_data = payment_info.get("response", {})
+
+            print("💳 PAYMENT:", payment_id, payment_data.get("status"))
+
+            if payment_data.get("status") == "approved":
+                order = Order.objects.filter(id=order_id).first()
+                if not order:
+                    print("❌ Orden no encontrada:", order_id)
+                    return HttpResponse(status=200)
+
+                order.status = "paid"
+                order.save()
+                print(f"✅ ORDEN {order_id} MARCADA COMO PAGADA")
+                break
+
+        return HttpResponse(status=200)
+
+    except Exception as e:
+        print("🔥 ERROR WEBHOOK:", str(e))
+        return HttpResponse(status=200)
+
+
+
+
+
+@login_required
+def mis_compras(request):
+    orders = (
+        Order.objects
+        .filter(user=request.user)
+        .prefetch_related("items")
+        .order_by("-created_at")
+    )
+
+    return render(
+        request,
+        "orders/mis_compras.html",
+        {"orders": orders}
+    )
+
+@login_required
+def factura_pdf(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+
+    # Seguridad
+    if not request.user.is_staff and order.user != request.user:
+        return HttpResponse("No autorizado", status=403)
+
+    template = get_template("orders/factura_pdf.html")
+    html = template.render({"order": order})
+
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="factura_orden_{order.id}.pdf"'
+
+    pisa_status = pisa.CreatePDF(
+        html,
+        dest=response
+    )
+
+    if pisa_status.err:
+        return HttpResponse("Error al generar PDF", status=500)
+
+    return response

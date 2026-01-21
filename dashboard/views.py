@@ -1,6 +1,6 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render
-from django.db.models import Sum, Count
+from django.db.models import Sum, F
 from orders.models import Order, OrderItem
 
 
@@ -11,12 +11,12 @@ def dashboard_home(request):
     pending_orders = Order.objects.filter(status="pending").count()
 
     total_revenue = (
-        OrderItem.objects.aggregate(
-            total=Sum("price")
-        )["total"] or 0
+        OrderItem.objects
+        .filter(order__status="paid")
+        .aggregate(total=Sum(F("price") * F("quantity")))["total"] or 0
     )
 
-    recent_orders = Order.objects.all()[:5]
+    recent_orders = Order.objects.select_related("user")[:5]
 
     context = {
         "total_orders": total_orders,

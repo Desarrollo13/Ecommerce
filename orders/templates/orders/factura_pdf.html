@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .box {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background: #f2f2f2;
+        }
+        .total {
+            text-align: right;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Factura / Comprobante</h1>
+
+<div class="box">
+    <strong>Orden Nº:</strong> {{ order.id }}<br>
+    <strong>Fecha:</strong> {{ order.created_at|date:"d/m/Y H:i" }}<br>
+    <strong>Cliente:</strong> {{ order.first_name }} {{ order.last_name }}<br>
+    <strong>Email:</strong> {{ order.email }}
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in order.items.all %}
+        <tr>
+            <td>{{ item.product_name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>$ {{ item.price }}</td>
+            <td>$ {{ item.get_total_price }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<p class="total">
+    Total pagado: $ {{ order.get_total }}
+</p>
+
+</body>
+</html>

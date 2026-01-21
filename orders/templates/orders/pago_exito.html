@@ -1,21 +1,31 @@
-{% extends "base/base.html" %}
-
-{% block title %}Pago aprobado{% endblock %}
+{% extends "base.html" %}
 
 {% block content %}
-<div class="container py-5 text-center">
-    <h2 class="text-success">✅ Pago aprobado</h2>
+<div style="max-width:600px; margin:40px auto; text-align:center;">
+    <h1 style="color:green;">✅ ¡Pago realizado con éxito!</h1>
 
-    <p class="mt-3">
-        Gracias por tu compra.
-    </p>
+    <p>Gracias por tu compra.</p>
 
-    <p>
-        Número de orden: <strong>#{{ order.id }}</strong>
-    </p>
+    <hr>
 
-    <a href="/" class="btn btn-primary mt-4">
+    <p><strong>Orden Nº:</strong> {{ order.id }}</p>
+    <p><strong>Total pagado:</strong> $ {{ order.get_total }}</p>
+    <p><strong>Estado:</strong> {{ order.get_status_display }}</p>
+    <p><strong>Fecha:</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+
+    <hr>
+
+    <a href="{% url 'product_list' %}" class="btn btn-primary">
         Volver a la tienda
     </a>
+    <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-secondary">
+        Ver detalle de la orden
+    </a>
+    <a href="{% url 'factura_pdf' order.id %}" class="btn btn-outline-secondary mt-3" target="_blank">
+        Descargar factura (PDF)
+    </a>
+
+
+    
 </div>
 {% endblock %}

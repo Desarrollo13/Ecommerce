@@ -1,4 +1,4 @@
-{% extends "base/base.html" %}
+{% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
@@ -53,6 +53,7 @@
                 <th>Email</th>
                 <th>Estado</th>
                 <th>Fecha</th>
+                <th>Acciones</th> {# 👈 NUEVO #}
             </tr>
         </thead>
         <tbody>
@@ -61,12 +62,37 @@
                     <td>{{ order.id }}</td>
                     <td>{{ order.first_name }}</td>
                     <td>{{ order.email }}</td>
-                    <td>{{ order.get_status_display }}</td>
+                    <td>
+                        {% if order.status == "paid" %}
+                            <span class="badge bg-success">Pagado</span>
+                        {% elif order.status == "pending" %}
+                            <span class="badge bg-warning">Pendiente</span>
+                        {% else %}
+                            <span class="badge bg-secondary">
+                                {{ order.get_status_display }}
+                            </span>
+                        {% endif %}
+                    </td>
                     <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+
+                    <td>
+                        <a href="{% url 'orders:order_detail' order.id %}"
+                           class="btn btn-sm btn-outline-primary">
+                            Ver
+                        </a>
+
+                        {% if order.status == "paid" %}
+                            <a href="{% url 'orders:factura_pdf' order.id %}"
+                               class="btn btn-sm btn-success"
+                               target="_blank">
+                                Factura
+                            </a>
+                        {% endif %}
+                    </td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="5">No hay órdenes</td>
+                    <td colspan="6">No hay órdenes</td>
                 </tr>
             {% endfor %}
         </tbody>
