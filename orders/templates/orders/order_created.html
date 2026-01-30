@@ -1,4 +1,4 @@
-{% extends "base/base.html" %}
+{% extends "base.html" %}
 {% block title %}Pedido realizado{% endblock %}
 
 {% block content %}
@@ -6,5 +6,8 @@
     <h2>¡Gracias por tu compra!</h2>
     <p>Tu número de orden es:</p>
     <h3>#{{ order.id }}</h3>
+    <a href="{% url 'orders:mp_pagar' order.id %}" class="btn btn-primary btn-lg">
+        Pagar con Mercado Pago
+    </a>
 </div>
 {% endblock %}

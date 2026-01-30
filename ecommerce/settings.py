@@ -11,6 +11,22 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "MiEcommerce <no-reply@miecommerce.com>"
+
+
+
+
+
+load_dotenv()
+
+# mercadopago
+MERCADOPAGO_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN")
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,8 +40,14 @@ SECRET_KEY = "django-insecure-4n6o#d%6n-ng2(^t=#h42$pw4y^^t1$wys!xl$sl#*x_1=^cs6
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "limbless-untaciturn-ardith.ngrok-free.dev",
+]
 
-ALLOWED_HOSTS = []
+
+# ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -40,10 +62,13 @@ INSTALLED_APPS = [
     "core",
     "products",
     "cart",
-    "orders",
+    # "orders",
+    "orders.apps.OrdersConfig",
     "accounts",
     "chatbot",
     "dashboard",
+
+   
 
 ]
 

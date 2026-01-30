@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Panel de administración</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-bg-primary">
+                <div class="card-body">
+                    <h5>Total órdenes</h5>
+                    <h2>{{ total_orders }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-bg-success">
+                <div class="card-body">
+                    <h5>Pagadas</h5>
+                    <h2>{{ paid_orders }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-bg-warning">
+                <div class="card-body">
+                    <h5>Pendientes</h5>
+                    <h2>{{ pending_orders }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-bg-dark">
+                <div class="card-body">
+                    <h5>Total vendido</h5>
+                    <h2>$ {{ total_revenue }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3>Últimas órdenes</h3>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Cliente</th>
+                <th>Email</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Acciones</th> {# 👈 NUEVO #}
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in recent_orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.first_name }}</td>
+                    <td>{{ order.email }}</td>
+                    <td>
+                        {% if order.status == "paid" %}
+                            <span class="badge bg-success">Pagado</span>
+                        {% elif order.status == "pending" %}
+                            <span class="badge bg-warning">Pendiente</span>
+                        {% else %}
+                            <span class="badge bg-secondary">
+                                {{ order.get_status_display }}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+
+                    <td>
+                        <a href="{% url 'orders:order_detail' order.id %}"
+                           class="btn btn-sm btn-outline-primary">
+                            Ver
+                        </a>
+
+                        {% if order.status == "paid" %}
+                            <a href="{% url 'orders:factura_pdf' order.id %}"
+                               class="btn btn-sm btn-success"
+                               target="_blank">
+                                Factura
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6">No hay órdenes</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

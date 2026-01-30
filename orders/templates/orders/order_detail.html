@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Orden #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="container my-5" style="max-width: 800px;">
+
+    <h2 class="mb-4">🧾 Detalle de la orden #{{ order.id }}</h2>
+
+    <p><strong>Estado:</strong>
+        <span class="badge bg-success">
+            {{ order.get_status_display }}
+        </span>
+    </p>
+
+    <p><strong>Fecha:</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+    <p><strong>Email:</strong> {{ order.email }}</p>
+    <p><strong>Dirección:</strong> {{ order.address }}, {{ order.city }}</p>
+
+    <hr>
+
+    <h4>Productos</h4>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.items.all %}
+            <tr>
+                <td>{{ item.product_name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>$ {{ item.price }}</td>
+                <td>$ {{ item.get_total_price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h5 class="text-end">
+        Total pagado:
+        <strong>$ {{ order.get_total }}</strong>
+    </h5>
+
+    <div class="mt-4">
+        <a href="/" class="btn btn-outline-primary">
+            ⬅ Volver a la tienda
+        </a>
+    </div>
+
+    {% if order.status == "paid" %}
+    <div class="mt-3 text-end">
+        <a href="{% url 'orders:factura_pdf' order.id %}" class="btn btn-success" target="_blank">
+            📄 Descargar factura
+        </a>
+    </div>
+    {% else %}
+    <p class="text-muted mt-3 text-end">
+        La factura estará disponible cuando el pago esté confirmado.
+    </p>
+    {% endif %}
+
+
+</div>
+{% endblock %}
